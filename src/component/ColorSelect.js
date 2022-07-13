@@ -1,12 +1,22 @@
+import { useReactive } from "ahooks";
 import React, { useRef } from "react";
 import { View, ImageBackground, StyleSheet, PanResponder } from "react-native";
 
 import colorSelectImage from '../images/color_wheel.png'
 
 export default function ColorSelect({
-    style
+    style = defStyle.root,
+    indicatorStyle = defStyle.indicator
 }) {
-    
+    const radius = style.width / 2;
+    const indicatorRadius = indicatorStyle.width / 2;
+    const state = useReactive({
+        radius,
+        indicatorPosition: {
+            x: radius - indicatorRadius,
+            y: radius - indicatorRadius,
+        }
+    });
 
     const panResponder = useRef(
         PanResponder.create({
@@ -17,16 +27,26 @@ export default function ColorSelect({
             onMoveShouldSetPanResponderCapture: () => true,
             onPanResponderTerminationRequest: () => true,
             onShouldBlockNativeResponder: () => true,
-            onPanResponderGrant: (evt, gestureState) => {
+            onPanResponderGrant: (event, gestureState) => {
                 // Down 事件
+                console.log(event.nativeEvent.locationX, event.nativeEvent.locationY);
+                state.indicatorPosition = {
+                    x: event.nativeEvent.locationX - indicatorRadius,
+                    y: event.nativeEvent.locationY - indicatorRadius
+                }
             },
-            onPanResponderMove: (evt, gestureState) => {
+            onPanResponderMove: (event, gestureState) => {
                 // Move 事件
+                console.log(event.nativeEvent.locationX, event.nativeEvent.locationY);
+                state.indicatorPosition = {
+                    x: event.nativeEvent.locationX - indicatorRadius,
+                    y: event.nativeEvent.locationY - indicatorRadius
+                }
             },
-            onPanResponderRelease: (evt, gestureState) => {
+            onPanResponderRelease: (event, gestureState) => {
                 // Up 事件
             },
-            onPanResponderTerminate: (evt, gestureState) => {
+            onPanResponderTerminate: (event, gestureState) => {
                 // Cancel 事件
             },
         })
@@ -34,17 +54,19 @@ export default function ColorSelect({
 
     return (
         <ImageBackground
-            style={[defStyle.root, style]}
+            style={style}
             resizeMode="center"
-            source={colorSelectImage}>
-            <View style={defStyle.indicator} {...panResponder.panHandlers} />
+            source={colorSelectImage}
+            {...panResponder.panHandlers}>
+            <View style={{ ...indicatorStyle, marginStart: state.indicatorPosition.x, marginTop: state.indicatorPosition.y }} />
         </ImageBackground>
     );
 }
 
 const defStyle = StyleSheet.create({
     root: {
-
+        width: 170,
+        height: 170
     },
     indicator: {
         width: 30,
